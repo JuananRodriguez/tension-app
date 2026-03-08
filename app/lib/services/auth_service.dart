@@ -113,9 +113,9 @@ class AuthService {
       debugPrint('🔧 Auth - Credenciales encontradas, verificando dispositivo...');
       
       final isSupported = await BiometricService.isDeviceSupported();
-      final isEnrolled = await BiometricService.isBiometricEnrolled();
+      // No verificar isEnrolled aquí, dejar que el diálogo nativo maneje el error
       
-      final result = useBiometric && isSupported && isEnrolled;
+      final result = useBiometric && isSupported && savedEmail != null && savedPassword != null;
       debugPrint('🔧 Auth - Puede usar biometría para login: $result');
       
       return result;
@@ -332,5 +332,18 @@ class AuthService {
 
   static Future<void> logout() async {
     await clearAuth();
+  }
+
+  static Future<void> logoutAndClearBiometric() async {
+    await clearAll();
+  }
+
+  static Future<void> clearBiometricOnly() async {
+    debugPrint('🔧 Auth - Limpiando solo credenciales biométricas...');
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyUseBiometric);
+    await prefs.remove(_keyBiometricEmail);
+    await prefs.remove(_keyBiometricPassword);
+    debugPrint('🔧 Auth - Credenciales biométricas eliminadas');
   }
 }
