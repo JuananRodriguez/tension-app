@@ -35,7 +35,7 @@ ENV=development
 
 #### Producción
 ```env
-API_BASE_URL=https://tension-monitor-production.up.railway.app
+API_BASE_URL=https://api-url.railway.app
 ENV=production
 ```
 
