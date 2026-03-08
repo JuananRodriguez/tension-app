@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/user.dart';
 import '../models/reading.dart';
 import 'auth_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.68.65:3000';
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://192.168.68.65:3000';
 
   static Future<List<User>> getUsers() async {
     final response = await http.get(

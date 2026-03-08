@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/login_screen.dart';
 import 'screens/readings_screen.dart';
 import 'services/auth_service.dart';
 
-void main() {
+Future<void> main() async {
+  // Cargar variables de entorno
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/user.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.68.65:3000';
+  static String get baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://192.168.68.65:3000';
   static String? _token;
   static User? _currentUser;
 
