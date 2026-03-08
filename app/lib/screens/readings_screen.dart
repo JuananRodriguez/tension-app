@@ -3,6 +3,7 @@ import '../models/reading.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'admin_screen.dart';
 
 class ReadingsScreen extends StatefulWidget {
   const ReadingsScreen({super.key});
@@ -181,11 +182,22 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
+    print('Usuario actual: ${user?.name}, isAdmin: ${AuthService.isAdmin}');
     return Scaffold(
       appBar: AppBar(
         title: Text('Mis Lecturas${user != null ? ' - ${user.name}' : ''}'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
+          if (AuthService.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminScreen()),
+                );
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {
