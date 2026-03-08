@@ -135,45 +135,13 @@ class AuthService {
         return {'success': false, 'error': 'Biometría no disponible'};
       }
       
-      debugPrint('🔧 Auth - Condiciones OK, verificando huella dactilar...');
-      
-      // Verificar estado del dispositivo antes de autenticar
-      final isSupported = await BiometricService.isDeviceSupported();
-      final isEnrolled = await BiometricService.isBiometricEnrolled();
-      final availableBiometrics = await BiometricService.getAvailableBiometrics();
-      
-      debugPrint('🔧 Auth - Estado final del dispositivo:');
-      debugPrint('🔧 Auth - isSupported: $isSupported');
-      debugPrint('🔧 Auth - isEnrolled: $isEnrolled');
-      debugPrint('🔧 Auth - availableBiometrics: $availableBiometrics');
-      
-      if (!isSupported) {
-        return {'success': false, 'error': 'Dispositivo no soporta biometría'};
-      }
-      
-      if (!isEnrolled) {
-        return {'success': false, 'error': 'No hay huella configurada en el dispositivo'};
-      }
-      
-      if (availableBiometrics.isEmpty) {
-        return {'success': false, 'error': 'No hay sensores biométricos disponibles'};
-      }
-      
-      debugPrint('🔧 Auth - Dispositivo listo, iniciando escáner biométrico...');
-      debugPrint('🔧 Auth - ⚠️ Por favor, pon tu huella en el sensor...');
-      
       final biometricResult = await BiometricService.authenticateWithBiometrics();
       
       if (!biometricResult) {
-        debugPrint('🔧 Auth - ❌ Escáner biométrico falló o fue cancelado por el usuario');
-        return {
-          'success': false, 
-          'error': 'Autenticación cancelada. Por favor, intenta nuevamente y mantén tu huella en el sensor hasta que se complete.'
-        };
+        return {'success': false, 'error': 'Autenticación biométrica fallida'};
       }
       
       debugPrint('🔧 Auth - ✅ Huella verificada exitosamente!');
-      debugPrint('🔧 Auth - Recuperando credenciales guardadas...');
       
       // Obtener credenciales guardadas
       final prefs = await SharedPreferences.getInstance();
@@ -181,25 +149,18 @@ class AuthService {
       final savedPassword = prefs.getString(_keyBiometricPassword);
       
       if (savedEmail == null || savedPassword == null) {
-        debugPrint('🔧 Auth - ❌ No hay credenciales guardadas');
         return {'success': false, 'error': 'Credenciales no encontradas'};
       }
-      
-      debugPrint('🔧 Auth - ✅ Credenciales encontradas');
       
       // Decodificar credenciales
       final email = utf8.decode(base64Decode(savedEmail));
       final password = utf8.decode(base64Decode(savedPassword));
       
-      debugPrint('🔧 Auth - Email recuperado: ${email.substring(0, 3)}***');
-      debugPrint('🔧 Auth - Iniciando login automático con API...');
-      
       // Hacer login automático
       return await login(email, password);
     } catch (e) {
-      debugPrint('🔧 Auth - ❌ Error en authenticateWithBiometric: $e');
+      debugPrint('🔧 Auth - Error en authenticateWithBiometric: $e');
       
-      // Analizar error específico
       String errorMessage = 'Error desconocido';
       if (e.toString().contains('BiometricLockedException')) {
         errorMessage = 'Demasiados intentos fallidos. Espera 30 segundos.';
@@ -209,8 +170,6 @@ class AuthService {
         errorMessage = 'Biometría no disponible en este dispositivo.';
       } else if (e.toString().contains('PermanentlyLockedOut')) {
         errorMessage = 'Dispositivo bloqueado permanentemente.';
-      } else if (e.toString().contains('PlatformException')) {
-        errorMessage = 'Error del sistema: ${e.toString()}';
       }
       
       return {'success': false, 'error': errorMessage};

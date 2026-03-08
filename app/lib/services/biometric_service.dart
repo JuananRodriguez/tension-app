@@ -52,15 +52,11 @@ class BiometricService {
   static Future<bool> authenticateWithBiometrics() async {
     try {
       debugPrint('🔧 Biometric - Iniciando autenticación biométrica...');
-      debugPrint('🔧 Biometric - 📱 Mostrando diálogo nativo de Android...');
-      
-      // Intentar primero con opciones más permisivas
-      debugPrint('🔧 Biometric - Intentando con opciones estándar...');
       
       final bool didAuthenticate = await _auth.authenticate(
         localizedReason: 'Autentícate con tu huella dactilar para continuar',
         options: const AuthenticationOptions(
-          biometricOnly: false,  // Cambiar a false para permitir PIN/patrón
+          biometricOnly: false,
           stickyAuth: true,
           useErrorDialogs: true,
         ),
@@ -69,27 +65,8 @@ class BiometricService {
       debugPrint('🔧 Biometric - Resultado autenticación: $didAuthenticate');
       return didAuthenticate;
     } catch (e) {
-      debugPrint('🔧 Biometric - Error en authenticateWithBiometrics: $e');
-      debugPrint('🔧 Biometric - Tipo de error: ${e.runtimeType}');
-      debugPrint('🔧 Biometric - Mensaje completo: ${e.toString()}');
-      
-      // Intentar con opciones aún más básicas
-      try {
-        debugPrint('🔧 Biometric - Reintentando con opciones básicas...');
-        final bool didAuthenticate = await _auth.authenticate(
-          localizedReason: 'Verifica tu identidad para continuar',
-          options: const AuthenticationOptions(
-            biometricOnly: false,
-            stickyAuth: false,
-            useErrorDialogs: false,
-          ),
-        );
-        debugPrint('🔧 Biometric - Segundo intento resultado: $didAuthenticate');
-        return didAuthenticate;
-      } catch (e2) {
-        debugPrint('🔧 Biometric - Error en segundo intento: $e2');
-        return false;
-      }
+      debugPrint('🔧 Biometric - Error en autenticación biométrica: $e');
+      return false;
     }
   }
 
