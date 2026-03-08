@@ -7,6 +7,20 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
+    <!-- Permisos adicionales para biometría -->
+    <uses-permission android:name="android.permission.USE_FACE_ID" />
+    <uses-permission android:name="android.permission.USE_IRIS" />
+
+    <!-- Permisos para Android 10+ -->
+    <uses-permission android:name="android.permission.ACCESS_BIOMETRIC" />
+
+    <!-- Permisos para Android 11+ -->
+    <uses-permission android:name="android.permission.BIOMETRIC" />
+
+    <!-- Permisos para solicitar activamente -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
     <!-- Permitir HTTP para desarrollo (quitar en producción) -->
     <application
         android:usesCleartextTraffic="true"
