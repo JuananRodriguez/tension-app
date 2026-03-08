@@ -123,6 +123,48 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
     );
   }
 
+  Future<void> _deleteReading(Reading reading) async {
+    if (reading.id == null) return;
+    try {
+      await ApiService.deleteReading(reading.id!);
+      _loadReadings();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Lectura eliminada')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar: $e')),
+        );
+      }
+    }
+  }
+
+  void _confirmDeleteReading(Reading reading) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar lectura'),
+        content: const Text('¿Eliminar esta lectura?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteReading(reading);
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Color _getPressureColor(int systolic, int diastolic) {
     if (systolic < 120 && diastolic < 80) return Colors.green;
     if (systolic < 130 && diastolic < 80) return Colors.yellow.shade700;
@@ -174,6 +216,10 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
                           ],
                         ),
                         isThreeLine: true,
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _confirmDeleteReading(r),
+                        ),
                       ),
                     );
                   },

@@ -46,4 +46,18 @@ class ApiService {
       throw Exception('Failed to create reading');
     }
   }
+
+  static Future<void> deleteUser(int userId) async {
+    final response = await http.delete(Uri.parse('$baseUrl/users/$userId'));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete user');
+    }
+  }
+
+  static Future<void> deleteReading(int readingId) async {
+    final response = await http.delete(Uri.parse('$baseUrl/readings/$readingId/delete'));
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete reading');
+    }
+  }
 }

@@ -4,7 +4,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::{get, post},
+    routing::{delete, get, post},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -63,8 +63,10 @@ async fn main() {
         .route("/health", get(health))
         .route("/users", post(create_user))
         .route("/users", get(list_users))
+        .route("/users/:id", delete(delete_user))
         .route("/readings", post(create_reading))
         .route("/readings/:user_id", get(list_readings))
+        .route("/readings/:id/delete", delete(delete_reading))
         .layer(
             CorsLayer::new()
                 .allow_origin(Any)
@@ -185,6 +187,42 @@ async fn list_readings(
         Err(e) => {
             eprintln!("Error fetching readings: {:?}", e);
             (StatusCode::INTERNAL_SERVER_ERROR, format!("Error fetching readings: {}", e)).into_response()
+        }
+    }
+}
+
+async fn delete_user(
+    Path(id): Path<i64>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let result = sqlx::query("DELETE FROM users WHERE id = ?")
+        .bind(id)
+        .execute(&state.db)
+        .await;
+
+    match result {
+        Ok(_) => (StatusCode::OK, Json(serde_json::json!({ "deleted": true }))).into_response(),
+        Err(e) => {
+            eprintln!("Error deleting user: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Error deleting user: {}", e)).into_response()
+        }
+    }
+}
+
+async fn delete_reading(
+    Path(id): Path<i64>,
+    State(state): State<AppState>,
+) -> impl IntoResponse {
+    let result = sqlx::query("DELETE FROM pressure_readings WHERE id = ?")
+        .bind(id)
+        .execute(&state.db)
+        .await;
+
+    match result {
+        Ok(_) => (StatusCode::OK, Json(serde_json::json!({ "deleted": true }))).into_response(),
+        Err(e) => {
+            eprintln!("Error deleting reading: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Error deleting reading: {}", e)).into_response()
         }
     }
 }
