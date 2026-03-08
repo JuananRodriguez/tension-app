@@ -22,7 +22,7 @@ struct AppState {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Claims {
-    sub: i64,
+    sub: i32,
     email: String,
     is_admin: bool,
     exp: usize,
@@ -49,7 +49,7 @@ struct AuthResponse {
 
 #[derive(Serialize, FromRow, Clone)]
 struct UserResponse {
-    id: i64,
+    id: i32,
     name: String,
     email: String,
     is_admin: Option<bool>,
@@ -58,7 +58,7 @@ struct UserResponse {
 
 #[derive(FromRow)]
 struct UserWithPassword {
-    id: i64,
+    id: i32,
     name: String,
     email: String,
     password_hash: String,
@@ -76,8 +76,8 @@ struct CreateReadingRequest {
 
 #[derive(Serialize, FromRow)]
 struct ReadingResponse {
-    id: i64,
-    user_id: i64,
+    id: i32,
+    user_id: i32,
     systolic: i32,
     diastolic: i32,
     pulse: Option<i32>,
@@ -85,7 +85,7 @@ struct ReadingResponse {
     created_at: String,
 }
 
-fn generate_token(user_id: i64, email: String, is_admin: bool) -> String {
+fn generate_token(user_id: i32, email: String, is_admin: bool) -> String {
     let jwt_secret = std::env::var("JWT_SECRET")
         .unwrap_or_else(|_| "secret-key".to_string());
     let exp = (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize;
@@ -172,7 +172,7 @@ async fn register(
 
     match result {
         Ok(row) => {
-            let user_id: i64 = row.get("id");
+            let user_id: i32 = row.get("id");
             let user = sqlx::query_as::<_, UserResponse>("SELECT id, name, email, is_admin, created_at::text FROM users WHERE id = $1")
                 .bind(user_id)
                 .fetch_one(db)
@@ -261,7 +261,7 @@ async fn list_users(State(state): State<AppState>) -> impl IntoResponse {
         None => return (StatusCode::SERVICE_UNAVAILABLE, "Database not available").into_response(),
     };
     
-    let users = sqlx::query_as::<_, UserResponse>("SELECT id, name, email, is_admin, created_at FROM users ORDER BY created_at DESC")
+    let users = sqlx::query_as::<_, UserResponse>("SELECT id, name, email, is_admin, created_at::text FROM users ORDER BY created_at DESC")
         .fetch_all(db)
         .await;
     match users {
@@ -335,7 +335,7 @@ async fn get_my_readings(
     };
 
     let readings = sqlx::query_as::<_, ReadingResponse>(
-        "SELECT id, user_id, systolic, diastolic, pulse, notes, created_at FROM pressure_readings WHERE user_id = $1 ORDER BY created_at DESC"
+        "SELECT id, user_id, systolic, diastolic, pulse, notes, created_at::text FROM pressure_readings WHERE user_id = $1 ORDER BY created_at::text DESC"
     )
     .bind(user_id)
     .fetch_all(db)
@@ -354,7 +354,7 @@ async fn list_user_readings(Path(user_id): Path<i64>, State(state): State<AppSta
     };
     
     let readings = sqlx::query_as::<_, ReadingResponse>(
-        "SELECT id, user_id, systolic, diastolic, pulse, notes, created_at::text FROM pressure_readings WHERE user_id = $1 ORDER BY created_at DESC"
+        "SELECT id, user_id, systolic, diastolic, pulse, notes, created_at::text FROM pressure_readings WHERE user_id = $1 ORDER BY created_at::text DESC"
     )
     .bind(user_id)
     .fetch_all(db)
@@ -400,7 +400,7 @@ async fn delete_my_reading(
     }
 }
 
-fn extract_user_id(headers: &axum::http::HeaderMap) -> Option<i64> {
+fn extract_user_id(headers: &axum::http::HeaderMap) -> Option<i32> {
     let auth_header = headers.get(header::AUTHORIZATION)?.to_str().ok()?;
     if !auth_header.starts_with("Bearer ") { return None; }
     let token = &auth_header[7..];
