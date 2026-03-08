@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/user.dart';
 import '../models/reading.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
+import 'login_screen.dart';
 
 class ReadingsScreen extends StatefulWidget {
-  final User user;
-
-  const ReadingsScreen({super.key, required this.user});
+  const ReadingsScreen({super.key});
 
   @override
   State<ReadingsScreen> createState() => _ReadingsScreenState();
@@ -28,7 +27,7 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
 
   Future<void> _loadReadings() async {
     try {
-      final readings = await ApiService.getReadings(widget.user.id);
+      final readings = await ApiService.getMyReadings();
       setState(() {
         _readings = readings;
         _loading = false;
@@ -56,7 +55,7 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
 
     try {
       await ApiService.createReading(Reading(
-        userId: widget.user.id,
+        userId: 0,
         systolic: systolic,
         diastolic: diastolic,
         pulse: int.tryParse(_pulseController.text),
@@ -181,10 +180,23 @@ class _ReadingsScreenState extends State<ReadingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService.currentUser;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lecturas de ${widget.user.name}'),
+        title: Text('Mis Lecturas${user != null ? ' - ${user.name}' : ''}'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              AuthService.logout();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'screens/users_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/readings_screen.dart';
+import 'services/auth_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const UsersScreen(),
+      home: AuthService.isAuthenticated ? const ReadingsScreen() : const LoginScreen(),
     );
   }
 }
