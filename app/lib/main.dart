@@ -7,6 +7,10 @@ import 'services/auth_service.dart';
 Future<void> main() async {
   // Cargar variables de entorno
   await dotenv.load(fileName: ".env");
+  
+  // Cargar sesión guardada
+  await AuthService.loadSavedSession();
+  
   runApp(const MyApp());
 }
 

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
 class AuthService {
@@ -11,14 +12,40 @@ class AuthService {
   static String? get token => _token;
   static User? get currentUser => _currentUser;
 
-  static void setAuth(String token, User user) {
+  static Future<void> setAuth(String token, User user) async {
     _token = token;
     _currentUser = user;
+    
+    // Guardar en SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    await prefs.setString('user_data', jsonEncode(user.toJson()));
   }
 
-  static void clearAuth() {
+  static Future<void> loadSavedSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedToken = prefs.getString('auth_token');
+    final savedUserData = prefs.getString('user_data');
+    
+    if (savedToken != null && savedUserData != null) {
+      _token = savedToken;
+      try {
+        _currentUser = User.fromJson(jsonDecode(savedUserData));
+      } catch (e) {
+        // Si hay error al parsear, limpiar sesión
+        await clearAuth();
+      }
+    }
+  }
+
+  static Future<void> clearAuth() async {
     _token = null;
     _currentUser = null;
+    
+    // Limpiar SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_data');
   }
 
   static bool get isAuthenticated => _token != null;
@@ -38,7 +65,7 @@ class AuthService {
 
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      setAuth(data['token'], User.fromJson(data['user']));
+      await setAuth(data['token'], User.fromJson(data['user']));
       return {'success': true};
     }
     return {'success': false, 'error': response.body};
@@ -53,13 +80,13 @@ class AuthService {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      setAuth(data['token'], User.fromJson(data['user']));
+      await setAuth(data['token'], User.fromJson(data['user']));
       return {'success': true};
     }
     return {'success': false, 'error': 'Invalid credentials'};
   }
 
-  static void logout() {
-    clearAuth();
+  static Future<void> logout() async {
+    await clearAuth();
   }
 }
